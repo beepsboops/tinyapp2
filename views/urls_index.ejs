@@ -9,6 +9,7 @@
   <title>TinyApp</title>
 </head>
 <body>
+  <%- include('partials/_header') %>
   <main style="margin: 1em;">
     <h3>My URLs</h3>
     <table class="table">
@@ -19,6 +20,7 @@
         </tr>
       </thead>
       <tbody>
+          <!-- href='#' // Put this here for creating new URL? // Template Engine - EJS assignment -->
         <% for(let url in urls) { %>
           <tr>
             <td><%= url %></td>
