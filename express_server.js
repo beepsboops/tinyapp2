@@ -68,7 +68,30 @@ app.get("/urls/:shortURL", (req, res) => {
  // POST ROUTES //
 ////////////////
 
+
+// POST // => CREATE NEW SHORT/TINY URL
 app.post("/urls", (req, res) => {
-  shortURL = randomShortURL()
+  // Declare variable, store value of generated new random short URL by calling randomShortURL function
+  let shortURL = randomShortURL()
+
+  // Declare variable, store value of user inputed long URL
+  let longURL = req.body.longURL
+
+  console.log("post /urls short URL", shortURL)
+  console.log("post /urls long URL", longURL)
+  
+  // Update urlDatabase with new key value pair of shortURL and longURL
+  urlDatabase[shortURL] = longURL;
+
+  console.log("urlDatabase", urlDatabase)
+  console.log("req.params", req.params.shortURL)
+  
+  // Redirect to new page for shortURL
   res.redirect(`/urls/${shortURL}`);
+});
+
+// POST // => REDIRECT FROM SHORT URL TO LONG URL
+app.get("/u/:shortURL", (req, res) => {
+  let longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL)
 });
