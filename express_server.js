@@ -31,6 +31,8 @@ const randomShortURL = function(length=6){
  // GET ROUTES //
 ///////////////
 
+//Test//
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
