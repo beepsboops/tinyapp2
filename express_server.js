@@ -31,8 +31,6 @@ const randomShortURL = function(length=6){
  // GET ROUTES //
 ///////////////
 
-//Test//
-
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -96,4 +94,10 @@ app.post("/urls", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL)
+});
+
+// POST // => DELETE URL
+app.post("/urls/:shortURL/delete", (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  res.redirect("/urls");
 });
