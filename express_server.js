@@ -52,18 +52,19 @@ app.get("/hello", (req, res) => {
 
 // GET // => MY URLS PAGE
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
   res.render("urls_index", templateVars);
 });
 
 // GET // => CREATE NEW URL/TINYURL PAGE
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = { username: req.cookies["username"] };
+  res.render("urls_new", templateVars);
 });
 
 // GET // => NEW SHORT URL
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"] };
   res.render("urls_show", templateVars);
 });
 
@@ -113,4 +114,24 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   // console.log("POST Edit req.params.shortURL", req.params.shortURL)
   urlDatabase[req.params.shortURL] = newLongURL;
   res.redirect("/urls");
+});
+
+// POST // LOGIN VIA NAV BAR
+app.post("/login", (req, res) => {
+  console.log("POST Login", req.body)
+  let username = req.body.username
+  console.log("POST Login username", username)
+  res.cookie("username", username)
+  res.redirect("/urls");
+});
+
+// POST // LOGOUT VIA NAV BAR
+app.post("/logout", (req, res) => {
+  console.log("POST Logout req.body:", req.body)
+  console.log("POST Logout req.cookies:", req.cookies)
+  let username = req.cookies.usernamee
+  console.log("POST Logout username:", username)
+  res.clearCookie("username")
+  res.redirect("/urls")
+
 });
