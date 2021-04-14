@@ -13,23 +13,86 @@ app.use(bodyParser.urlencoded({extended: true}));
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
-  ///////////////
- // DATABASE //
-/////////////
+
+  /////////
+ // DEV //
+/////////
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
+
+// FOR CHECKING STATE OF URL DATABASE
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
+
+// FOR CHECKING STATE OF USER DATABASE
+app.get("/users.json", (req, res) => {
+  res.json(users);
+});
+
+app.get("/hello", (req, res) => {
+  res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+
+  ////////////
+ // URL DB //
+////////////
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
-  ///////////////////////////////
- // RANDOM SHORT URL FUNCTION //
-///////////////////////////////
 
-const randomShortURL = function(length=6){
+  //////////////
+ // USERS DB //
+//////////////
+
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
+  //////////////////////
+ // HELPER FUNCTIONS //
+//////////////////////
+
+// RANDOMSTRING FUNCTION
+const randomString = function(length=6){
   return Math.random().toString(20).substr(2, length)
   }
 
+// FINDUSER FUNCTION
+// let user_idValue = "user2RandomID"
+// console.log("----------------------------------")
+// console.log("findUser Func, userDB:", users)
+// console.log("----------------------------------")
+// console.log("findUser Func, individualUserOb:", user_idValue)
+// console.log("----------------------------------")
+const findUser = function(user_idValue) {
+  for (let property in users) {
+    const individualUserObj = users[user_idValue];
+    // console.log("findUser Func, property:", property)
+    if (property === user_idValue) {
+      return individualUserObj
+    }
+  }
+  return false;
+};
+// console.log("----------------------------------")
+// console.log("findUser output:", findUser("user2RandomID"))
+// console.log("----------------------------------")
   /////////////////
  // GET ROUTES //
 ///////////////
@@ -38,22 +101,17 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
 // GET // => MY URLS PAGE
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  let userObj = findUser(req.cookies.user_id)
+  console.log(userObj)
+  const templateVars = { urls: urlDatabase, userObj: userObj };
   res.render("urls_index", templateVars);
+});
+
+app.get("/register", (req, res) => {
+  const templateVars = {username: req.cookies["username"] }
+  res.render("register", templateVars)
 });
 
 // GET // => CREATE NEW URL/TINYURL PAGE
@@ -68,15 +126,15 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+
   //////////////////
  // POST ROUTES //
 ////////////////
 
-
 // POST // => CREATE NEW SHORT/TINY URL
 app.post("/urls", (req, res) => {
-  // Declare variable, store value of generated new random short URL by calling randomShortURL function
-  let shortURL = randomShortURL()
+  // Declare variable, store value of generated new random short URL by calling randomString function
+  let shortURL = randomString()
 
   // Declare variable, store value of user inputed long URL
   let longURL = req.body.longURL
@@ -92,6 +150,35 @@ app.post("/urls", (req, res) => {
   
   // Redirect to new page for shortURL
   res.redirect(`/urls/${shortURL}`);
+});
+
+// POST // => REGISTRATION PAGE
+app.post("/register", (req, res) => {
+
+  console.log("POST register req.body", req.body)
+  
+  // Pull data from req.body
+  const userRandomID = randomString();
+  const email = req.body.email;
+  const password = req.body.password;
+
+  console.log("POST register id", userRandomID)
+  console.log("POST register email", email)
+  console.log("POST register password", password)
+
+  // Add pulled data as new user object to users DB
+  users[userRandomID] = { "id": userRandomID, "email": email, "password": password }
+
+  console.log("POST register usersDB", users)
+
+  // Set user_id cookie containing the user's newly generated ID
+  res.cookie("user_id", userRandomID)
+
+  console.log("POST register req.cookies", req.cookies)
+
+  // Redirect to home page
+  res.redirect("/urls")
+
 });
 
 // POST // => REDIRECT FROM SHORT URL TO LONG URL
@@ -119,19 +206,19 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 // POST // LOGIN VIA NAV BAR
 app.post("/login", (req, res) => {
   console.log("POST Login", req.body)
-  let username = req.body.username
+  let username = req.body.username;
   console.log("POST Login username", username)
-  res.cookie("username", username)
+  res.cookie("username", username);
   res.redirect("/urls");
 });
 
 // POST // LOGOUT VIA NAV BAR
 app.post("/logout", (req, res) => {
-  console.log("POST Logout req.body:", req.body)
-  console.log("POST Logout req.cookies:", req.cookies)
+  console.log("POST Logout req.body:", req.body);
+  console.log("POST Logout req.cookies:", req.cookies);
   let username = req.cookies.usernamee
   console.log("POST Logout username:", username)
-  res.clearCookie("username")
-  res.redirect("/urls")
+  res.clearCookie("username");
+  res.redirect("/urls");
 
 });
