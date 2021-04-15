@@ -9,7 +9,7 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
         <!-- Login/Logout Display Conditional Logic -->
-        <% if (!userObj) { %>
+        <% if (!username) { %>
           <form class="form-inline" action="/login" method="POST">
             <div class="form-group mb-2">
               <input class="form-control" type="text" name="username" placeholder="Username" style="width: 200px; margin: 1em">
@@ -18,13 +18,11 @@
           </form>
           
           <% } else { %>
-            <p>Logged in as <%= userObj.email %></p>
+            <p>Logged in as <%= username.email %></p>
             <form method="POST" action="/logout" name="username">
             <button type="submit" class="btn btn-light">Log out</button></form>
             <!-- <button type="submit" class="btn btn-light" action="/logout" method="POST">Logout</button> -->
           <% } %>
-
-
 
       </div>
     </div>
