@@ -43,10 +43,20 @@ app.get("/users.json", (req, res) => {
  // URL DB //
 ////////////
 
+// URL DB 2.0
+
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "userRandomID" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "userRandomID" }
 };
+
+
+// URB DB 1.0
+
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
 
 
   //////////////
@@ -111,6 +121,21 @@ const findUserByEmail = function (userEmail, users) {
   return false;
 };
 
+// [HELPER FUNCTION] => FINDUSERURLS
+
+const findUserURLs = function (loggedInUser, database) {
+  let result = {}
+  for (let key in database) {
+    // let userURLs = database[key].longURL;
+    // console.log("| LOG | finderUserURLs | userURLs:", userURLs);
+    // console.log("| LOG | finderUserURLs | key output:", database[key].userID);
+    if (loggedInUser === database[key].userID) {
+      result[key] = database[key].longURL
+    }
+  }
+  // console.log("| LOG | finderUserURLs | result:", result)
+  return result;
+};
 
   ////////////////
  // GET ROUTES //
@@ -123,19 +148,29 @@ app.get("/", (req, res) => {
 // [GET] => MY URLS PAGE
 
 app.get("/urls", (req, res) => {
-  console.log("GET | /urls | req.body:", req.body)
-  console.log("GET | /urls | req.session:", req.session)
-  console.log("GET | /urls | req.cookies:", req.cookies)
-  console.log("GET | /urls | req.cookies.user_id:", req.cookies.user_id)
-
+  // console.log("GET | /urls | req.body:", req.body)
+  // console.log("GET | /urls | req.session:", req.session)
+  // console.log("GET | /urls | req.cookies:", req.cookies)
+  // console.log("GET | /urls | req.cookies.user_id:", req.cookies.user_id)
+  // console.log("GET | /urls | urlDatabase.longURL:", urlDatabase.longURL)
+  
+  // Retrieve user from req.cookies 
   let user = req.cookies.user_id
-
-  console.log("GET | /urls | user:", user)
+  
+  // console.log("| GET | /urls | user:", user)
+  
+  
+  // console.log("| GET | /urls | findUserURLs(user, urlDatabase):", findUserURLs(user, urlDatabase))
+  
+  // Store in variable result of calling findUserURLs function passing in logged in user and existing urlDatabase 
+  let urls = findUserURLs(user, urlDatabase)
+  
+  // console.log("| LOG | GET | /urls | urls:", urls)
 
   // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out
   // Pass in "users" (user DB) for conditional logic in _header.ejs so that email can be looked up and displayed in header
-  // Pass in "urlDatabase" so that /urls can display all urls
-  const templateVars = { user: user, users: users, urls: urlDatabase };
+  // Pass in "urlDatabase" so that urls_index.ejs can display all urls
+  const templateVars = { user: user, users: users, urls: urls };
   res.render("urls_index", templateVars);
 });
 
@@ -144,7 +179,7 @@ app.get("/urls", (req, res) => {
 app.get("/register", (req, res) => {
   let user = req.cookies.user_id
 
-  // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out // If register button is visible, user should not exist ie = false
+  // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out // If register button is visible, user should not exist ie user = false
   const templateVars = { user: user };
   res.render("register", templateVars);
 });
@@ -154,7 +189,7 @@ app.get("/register", (req, res) => {
 app.get("/login", (req, res) => {
   let user = req.cookies.user_id
 
-  // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out // If register button is visible, user should not exist ie = false
+  // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out // If register button is visible, user should not exist ie user = false
   const templateVars = { user: user };
   res.render("login", templateVars)
 });
@@ -164,17 +199,24 @@ app.get("/login", (req, res) => {
 app.get("/urls/new", (req, res) => {
   let user = req.cookies.user_id
 
-  // Pass in "user"  for conditional logic in _header.ejs so that it can know if a user is logged in or logged out
-  // Pass in "users" (user DB) for conditional logic in _header.ejs so that email can be looked up and displayed in header
-  const templateVars = { user: user, users: users };
-  res.render("urls_new", templateVars);
+  // If someone is not logged in when trying to access /urls/new, redirect them to the login page
+  if (!user) {
+    res.redirect("/login")
+  }
+
+    // If user = true
+    // Pass in "user"  for conditional logic in _header.ejs so that it can know if a user is logged in or logged out
+    // Pass in "users" (user DB) for conditional logic in _header.ejs so that email can be looked up and displayed in header
+    const templateVars = { user: user, users: users };
+    res.render("urls_new", templateVars);
+
 });
 
 // [GET] => NEW SHORT URL
 
 app.get("/urls/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL
-  let longURL = urlDatabase[req.params.shortURL]
+  let longURL = urlDatabase[req.params.shortURL].longURL
   let user = req.cookies.user_id
 
   // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out
