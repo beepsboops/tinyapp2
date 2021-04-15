@@ -82,7 +82,7 @@ const randomString = function(length=6){
 // console.log("----------------------------------")
 // console.log("findUser Func, userDB:", users)
 // console.log("----------------------------------")
-// console.log("findUser Func, individualUserOb:", user_idValue)
+// console.log("findUser Func, individualUserObj2:", user_idValue)
 // console.log("----------------------------------")
 const findUser = function(user_idValue) {
   for (let property in users) {
@@ -103,16 +103,18 @@ const findUser = function(user_idValue) {
 const findUserByEmail = function (userEmail, users) {
   for (let key in users) {
     if (users[key].email === userEmail) {
-      return true;
+      // console.log("findUserByEmail | true")
+      // console.log("findUserByEmail | users[key]", users[key])
+      return users[key];
     }
   }
   return false;
 };
 
 
-  /////////////////
+  ////////////////
  // GET ROUTES //
-///////////////
+////////////////
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -121,42 +123,65 @@ app.get("/", (req, res) => {
 // [GET] => MY URLS PAGE
 
 app.get("/urls", (req, res) => {
-  // console.log("GET | /urls | req.cookies:", req.body)
-  // console.log("GET | /urls | req.session:", req.session)
-  // console.log("GET | /urls | req.cookies:", req.cookies)
+  console.log("GET | /urls | req.body:", req.body)
+  console.log("GET | /urls | req.session:", req.session)
+  console.log("GET | /urls | req.cookies:", req.cookies)
+  console.log("GET | /urls | req.cookies.user_id:", req.cookies.user_id)
 
-  let username = users[req.cookies.username]
-  // console.log("GET | /urls | username:", username)
-  const templateVars = { urls: urlDatabase, username: username };
+  let user = req.cookies.user_id
+
+  console.log("GET | /urls | user:", user)
+
+  // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out
+  // Pass in "users" (user DB) for conditional logic in _header.ejs so that email can be looked up and displayed in header
+  // Pass in "urlDatabase" so that /urls can display all urls
+  const templateVars = { user: user, users: users, urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
 // [GET] => REGISTER
 
 app.get("/register", (req, res) => {
-  const templateVars = {username: req.cookies["username"] };
+  let user = req.cookies.user_id
+
+  // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out // If register button is visible, user should not exist ie = false
+  const templateVars = { user: user };
   res.render("register", templateVars);
 });
 
 // [GET] => LOGIN
 
 app.get("/login", (req, res) => {
-  let username = users[req.cookies.username]
-  const templateVars = { username: username };
+  let user = req.cookies.user_id
+
+  // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out // If register button is visible, user should not exist ie = false
+  const templateVars = { user: user };
   res.render("login", templateVars)
 });
 
 // [GET] => CREATE NEW URL/TINYURL PAGE
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  let user = req.cookies.user_id
+
+  // Pass in "user"  for conditional logic in _header.ejs so that it can know if a user is logged in or logged out
+  // Pass in "users" (user DB) for conditional logic in _header.ejs so that email can be looked up and displayed in header
+  const templateVars = { user: user, users: users };
   res.render("urls_new", templateVars);
 });
 
 // [GET] => NEW SHORT URL
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"] };
+  let shortURL = req.params.shortURL
+  let longURL = urlDatabase[req.params.shortURL]
+  let user = req.cookies.user_id
+
+  // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out
+  // Pass in "users" (user DB) for conditional logic in _header.ejs so that email can be looked up and displayed in header
+  // Pass in "longURL" in order to display on urls_new.ejs
+  // Pass in "shortURL" in order to display on urls_new.ejs // urls_new.ejs will handle redirect  
+  const templateVars = { user: user, users: users, longURL: longURL, shortURL: shortURL };
   res.render("urls_show", templateVars);
 });
 
@@ -239,12 +264,59 @@ app.post("/register", (req, res) => {
 // [POST] => LOGIN 2.0
 
 app.post("/login", (req, res) => {
-  let email = req.body.email;
-  let password = req.body.password;
+  
+  // Extract needed data from req.body
+  let submittedEmail = req.body.email;
+  let submittedPassword = req.body.password;
 
-  console.log("POST | LOGIN 2.0 | email:", email)
-  console.log("POST | LOGIN 2.0 | password:", password)
+  // console.log("POST | LOGIN 2.0 | submitted email:", submittedEmail)
+  // console.log("POST | LOGIN 2.0 | submitted password:", submittedPassword)
+  
+  // Store in a variable individual user object by pulling out data via findUserByEmail function
+  let individualUserObj = findUserByEmail(submittedEmail, users)
 
+  // console.log("POST | LOGIN 2.0 | individualUserObj output:", individualUserObj)
+
+  // If user submitted email doesn't exist in individualUserObj, return error
+  if (!individualUserObj) {
+    res.send("status code 403: email can't be found");
+    return;
+  };
+  
+  // Store in a variable the password stored in individualUserObj 
+  let storedPassword = individualUserObj.password
+
+  console.log("POST | LOGIN 2.0 | storedPassword:", storedPassword)
+
+  // if submittedPassword doesn't match storedPassword, return error
+  if (submittedPassword !== storedPassword) {
+    // console.log("POST | LOGIN 2.0 | (submittedPassword === storedPassword) = false")
+    res.send("status code 403: invalid password");
+    return;
+  };
+
+  // Store in a variable the id in individualUserObj
+  let storedUserID = individualUserObj.id
+
+  // console.log("POST | LOGIN 2.0 | storedUserID:", storedUserID)
+
+  // Set user_id cookie with value of storedUserID
+  res.cookie("user_id", storedUserID);
+
+  // Redirect to /urls
+  res.redirect("/urls")
+
+});
+
+// [POST] => LOGOUT 2.0
+
+app.post("/logout", (req, res) => {
+  // console.log("POST Logout 2.0 req.body:", req.body);
+  // console.log("POST Logout 2.0 req.cookies:", req.cookies);
+
+  // Clear cookie // Don't need to pass variables or pull info from req.cookies, as we already know the name of the key of the cookie that we want to clear - "user_id" // This should be passed as string
+  res.clearCookie("user_id");
+  res.redirect("/urls");
 });
 
 // [POST] => DELETE URL
@@ -272,6 +344,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 
 // [POST] => => LOGIN 1.0 VIA NAV BAR
 
+/*
 app.post("/login", (req, res) => {
   // console.log("POST Login", req.body)
   let username = req.body.username;
@@ -279,14 +352,17 @@ app.post("/login", (req, res) => {
   res.cookie("username", username);
   res.redirect("/urls");
 });
+*/
 
 // [POST] => LOGOUT 1.0 VIA NAV BAR
 
+/*
 app.post("/logout", (req, res) => {
   // console.log("POST Logout req.body:", req.body);
   // console.log("POST Logout req.cookies:", req.cookies);
-  let username = req.cookies.usernamee
+  let username = req.cookies.username
   // console.log("POST Logout username:", username)
   res.clearCookie("username");
   res.redirect("/urls");
 });
+*/
