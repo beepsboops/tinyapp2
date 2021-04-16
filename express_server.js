@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+const { findUserByEmail, randomString, urlsForUser } = require(`./helpers`);
+
 app.set("view engine", "ejs");
 
 morgan = require('morgan');
@@ -10,10 +12,17 @@ app.use(morgan('dev'));
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
+// Deprecated
+// const cookieParser = require('cookie-parser');
+// app.use(cookieParser());
 
 const bcrypt = require('bcrypt');
+
+const cookieSession = require('cookie-session');
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}))
 
   /////////
  // DEV //
@@ -82,67 +91,6 @@ const users = {
     }
 }
 
-  //////////////////////
- // HELPER FUNCTIONS //
-//////////////////////
-
-// [HELPER FUNCTION] => RANDOMSTRING
-
-const randomString = function(length=6){
-  return Math.random().toString(20).substr(2, length)
-  }
-
-// [HELPER FUNCTION] => FINDUSER
-
-// let user_idValue = "user2RandomID"
-// console.log("----------------------------------")
-// console.log("findUser Func, userDB:", users)
-// console.log("----------------------------------")
-// console.log("findUser Func, individualUserObj2:", user_idValue)
-// console.log("----------------------------------")
-const findUser = function(user_idValue) {
-  for (let property in users) {
-    const individualUserObj2 = users[user_idValue];
-    // console.log("findUser Func, property:", property)
-    if (property === user_idValue) {
-      return individualUserObj2
-    }
-  }
-  return false;
-};
-// console.log("----------------------------------")
-// console.log("findUser output:", findUser("user2RandomID"))
-// console.log("----------------------------------")
-
-// [HELPER FUNCTION] => FINDUSERBYEMAIL
-
-const findUserByEmail = function (userEmail, users) {
-  for (let key in users) {
-    if (users[key].email === userEmail) {
-      // console.log("findUserByEmail | true")
-      // console.log("findUserByEmail | users[key]", users[key])
-      return users[key];
-    }
-  }
-  return false;
-};
-
-// [HELPER FUNCTION] => URLSFORUSER
-
-const urlsForUser = function (loggedInUser, database) {
-  let result = {}
-  for (let key in database) {
-    // let userURLs = database[key].longURL;
-    // console.log("| LOG | finderUserURLs | userURLs:", userURLs);
-    // console.log("| LOG | finderUserURLs | key output:", database[key].userID);
-    if (loggedInUser === database[key].userID) {
-      result[key] = database[key].longURL
-    }
-  }
-  // console.log("| LOG | finderUserURLs | result:", result)
-  return result;
-};
-
   ////////////////
  // GET ROUTES //
 ////////////////
@@ -161,7 +109,7 @@ app.get("/urls", (req, res) => {
   // console.log("GET | /urls | urlDatabase.longURL:", urlDatabase.longURL)
   
   // Retrieve user from req.cookies 
-  let user = req.cookies.user_id
+  let user = req.session.user_id
 
   // console.log("| GET | /urls | user:", user)
     
@@ -182,7 +130,7 @@ app.get("/urls", (req, res) => {
 // [GET] => REGISTER
 
 app.get("/register", (req, res) => {
-  let user = req.cookies.user_id
+  let user = req.session.user_id
 
   // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out // If register button is visible, user should not exist ie user = false
   const templateVars = { user: user };
@@ -192,7 +140,7 @@ app.get("/register", (req, res) => {
 // [GET] => LOGIN
 
 app.get("/login", (req, res) => {
-  let user = req.cookies.user_id
+  let user = req.session.user_id
 
   // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out // If register button is visible, user should not exist ie user = false
   const templateVars = { user: user };
@@ -202,7 +150,7 @@ app.get("/login", (req, res) => {
 // [GET] => CREATE NEW URL/TINYURL PAGE
 
 app.get("/urls/new", (req, res) => {
-  let user = req.cookies.user_id
+  let user = req.session.user_id
 
   // If someone is not logged in when trying to access /urls/new, redirect them to the login page
   if (!user) {
@@ -222,7 +170,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL
   let longURL = urlDatabase[req.params.shortURL].longURL
-  let user = req.cookies.user_id
+  let user = req.session.user_id
 
   // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out
   // Pass in "users" (user DB) for conditional logic in _header.ejs so that email can be looked up and displayed in header
@@ -256,7 +204,7 @@ app.post("/urls", (req, res) => {
   // console.log("post /urls short URL", shortURL)
   // console.log("post /urls long URL", longURL)
 
-  let user = req.cookies.user_id 
+  let user = req.session.user_id 
 
   // Update urlDatabase with new key value pair of shortURL and longURL
   urlDatabase[shortURL] = { longURL: longURL, userID: user };
@@ -307,7 +255,8 @@ app.post("/register", (req, res) => {
   // console.log("POST register usersDB", users)
 
   // Set user_id cookie containing the user's newly generated ID
-  res.cookie("user_id", uniqueUserID)
+  // res.cookie("user_id", uniqueUserID) // Deprecated
+  req.session.user_id = uniqueUserID;
 
   // console.log("POST register req.cookies", req.cookies)
 
@@ -360,7 +309,8 @@ app.post("/login", (req, res) => {
   // console.log("POST | LOGIN 2.0 | storedUserID:", storedUserID)
 
   // Set user_id cookie with value of storedUserID
-  res.cookie("user_id", storedUserID);
+  // res.cookie("user_id", storedUserID); // Deprecated
+  req.session.user_id = storedUserID
 
   // Redirect to /urls
   res.redirect("/urls")
@@ -374,7 +324,9 @@ app.post("/logout", (req, res) => {
   // console.log("POST Logout 2.0 req.cookies:", req.cookies);
 
   // Clear cookie // Don't need to pass variables or pull info from req.cookies, as we already know the name of the key of the cookie that we want to clear - "user_id" // This should be passed as string
-  res.clearCookie("user_id");
+  // res.clearCookie("user_id"); // Deprecated
+  req.session.user_id = null;
+
   res.redirect("/urls");
 });
 
@@ -383,7 +335,7 @@ app.post("/logout", (req, res) => {
 app.post("/urls/:shortURL/edit", (req, res) => {
 
   // Verify that a user is logged in, in order to deny unauthorized editing
-  let user = req.cookies.user_id
+  let user = req.session.user_id
 
   if (!user) {
     return;
@@ -407,7 +359,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
 
   // Verify that a user is logged in, in order to deny unauthorized editing
-  let user = req.cookies.user_id
+  let user = req.session.user_id
 
   if (!user) {
     return;
