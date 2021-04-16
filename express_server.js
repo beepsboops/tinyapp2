@@ -121,9 +121,9 @@ const findUserByEmail = function (userEmail, users) {
   return false;
 };
 
-// [HELPER FUNCTION] => FINDUSERURLS
+// [HELPER FUNCTION] => URLSFORUSER
 
-const findUserURLs = function (loggedInUser, database) {
+const urlsForUser = function (loggedInUser, database) {
   let result = {}
   for (let key in database) {
     // let userURLs = database[key].longURL;
@@ -156,20 +156,19 @@ app.get("/urls", (req, res) => {
   
   // Retrieve user from req.cookies 
   let user = req.cookies.user_id
-  
+
   // console.log("| GET | /urls | user:", user)
-  
-  
-  // console.log("| GET | /urls | findUserURLs(user, urlDatabase):", findUserURLs(user, urlDatabase))
-  
-  // Store in variable result of calling findUserURLs function passing in logged in user and existing urlDatabase 
-  let urls = findUserURLs(user, urlDatabase)
+    
+  // console.log("| GET | /urls | urlsForUser(user, urlDatabase):", urlsForUser(user, urlDatabase))
+
+  // Store in variable the result of calling "urlsForUser" function passing in "user" (logged in user) and "urlDatabase", which will return an object containing the URLs (ie key value pairs) (ie shortURL: longURL) associated with the current logged in user
+  let urls = urlsForUser(user, urlDatabase);
   
   // console.log("| LOG | GET | /urls | urls:", urls)
 
   // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out
   // Pass in "users" (user DB) for conditional logic in _header.ejs so that email can be looked up and displayed in header
-  // Pass in "urlDatabase" so that urls_index.ejs can display all urls
+  // Pass in "urls" so that urls_index.ejs can display all urls associate with logged in user
   const templateVars = { user: user, users: users, urls: urls };
   res.render("urls_index", templateVars);
 });
