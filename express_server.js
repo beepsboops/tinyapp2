@@ -360,21 +360,45 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 });
 
-// [POST] => DELETE URL
-
-app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect("/urls");
-});
-
 // [POST] => EDIT LONG URL
 
 app.post("/urls/:shortURL/edit", (req, res) => {
-  // console.log("POST Edit req.body", req.body)
+
+  // Verify that a user is logged in, in order to deny unauthorized editing
+  let user = req.cookies.user_id
+
+  if (!user) {
+    return;
+  }
+
+  console.log("| POST | EDIT | user:", user)
+  console.log("| POST | EDIT | req.body:", req.body)
+  
   newLongURL = req.body.newLongURL
-  // console.log("POST Edit newLongURL", newLongURL)
-  // console.log("POST Edit req.params.shortURL", req.params.shortURL)
-  urlDatabase[req.params.shortURL] = newLongURL;
+  
+  console.log("| POST | EDIT | newLongURL:", newLongURL)
+  // console.log("| POST | EDIT | req.params.shortURL:", req.params.shortURL)
+  
+  urlDatabase[req.params.shortURL].longURL = newLongURL;
+
+  res.redirect("/urls");
+});
+
+// [POST] => DELETE URL
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+
+  // Verify that a user is logged in, in order to deny unauthorized editing
+  let user = req.cookies.user_id
+
+  if (!user) {
+    return;
+  }
+
+  // Delete requested URL
+  delete urlDatabase[req.params.shortURL];
+  
+  // Then redirect to /urls
   res.redirect("/urls");
 });
 
