@@ -13,6 +13,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
+const bcrypt = require('bcrypt');
 
   /////////
  // DEV //
@@ -73,7 +74,12 @@ const users = {
     id: "user2RandomID", 
     email: "user2@example.com", 
     password: "dishwasher-funk"
-  }
+  },
+  "0fe99b": {
+    "id": "0fe99b",
+    "email": "tiny@tiny.com",
+    "password": "$2b$10$YT8hvj9HhinN3ovJ8rpwDumJCK4VqbWukAko1vR7jLIsZOSus//Je"
+    }
 }
 
   //////////////////////
@@ -249,9 +255,12 @@ app.post("/urls", (req, res) => {
 
   // console.log("post /urls short URL", shortURL)
   // console.log("post /urls long URL", longURL)
-  
+
+  let user = req.cookies.user_id 
+
   // Update urlDatabase with new key value pair of shortURL and longURL
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL] = { longURL: longURL, userID: user };
+
 
   // console.log("urlDatabase", urlDatabase)
   // console.log("req.params", req.params.shortURL)
@@ -287,8 +296,13 @@ app.post("/register", (req, res) => {
     return;
   }
 
+  // Create hashed version of user sumbitted password
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
+  console.log("| POST | REGISTER | hashedPassword:", hashedPassword)
+
   // Create new user object with data pulled from req.body and add this to users DB
-  users[uniqueUserID] = { "id": uniqueUserID, "email": email, "password": password }
+  users[uniqueUserID] = { "id": uniqueUserID, "email": email, "password": hashedPassword }
 
   // console.log("POST register usersDB", users)
 
@@ -329,8 +343,12 @@ app.post("/login", (req, res) => {
 
   console.log("POST | LOGIN 2.0 | storedPassword:", storedPassword)
 
+  // Below was replaced with hashed password functionality
   // if submittedPassword doesn't match storedPassword, return error
-  if (submittedPassword !== storedPassword) {
+  // if (submittedPassword !== storedPassword) {
+
+  // if submittedPassword doesn't match hashedPassword, return error
+  if (bcrypt.compareSync(submittedPassword, storedPassword) === false) {
     // console.log("POST | LOGIN 2.0 | (submittedPassword === storedPassword) = false")
     res.send("status code 403: invalid password");
     return;
