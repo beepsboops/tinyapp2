@@ -24,19 +24,15 @@ app.use(cookieSession({
 // DEV //
 /////////
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 // FOR CHECKING STATE OF URL DATABASE
 
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
 
 // FOR CHECKING STATE OF USER DATABASE
 
@@ -159,7 +155,7 @@ app.get("/urls/:shortURL", (req, res) => {
 // [GET] => REDIRECT FROM SHORT URL TO LONG URL
 
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -302,4 +298,8 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   
   // Then redirect to /urls
   res.redirect("/urls");
+});
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
