@@ -6,19 +6,21 @@ const { findUserByEmail, randomString, urlsForUser } = require(`./helpers`);
 
 app.set("view engine", "ejs");
 
-morgan = require('morgan');
-app.use(morgan('dev'));
+morgan = require("morgan");
+app.use(morgan("dev"));
 
 const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 
-const cookieSession = require('cookie-session');
-app.use(cookieSession({
-  name: 'session',
-  keys: ['key1', 'key2']
-}));
+const cookieSession = require("cookie-session");
+app.use(
+  cookieSession({
+    name: "session",
+    keys: ["key1", "key2"],
+  })
+);
 
 /////////
 // DEV //
@@ -40,7 +42,6 @@ app.get("/urls.json", (req, res) => {
 //   res.json(users);
 // });
 
-
 ////////////
 // URL DB //
 ////////////
@@ -49,7 +50,7 @@ app.get("/urls.json", (req, res) => {
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "userRandomID" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "userRandomID" }
+  i3BoGr: { longURL: "https://www.google.ca", userID: "userRandomID" },
 };
 
 //////////////
@@ -57,21 +58,21 @@ const urlDatabase = {
 //////////////
 
 const users = {
-  "userRandomID": {
+  userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "purple-monkey-dinosaur",
   },
-  "user2RandomID": {
+  user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: "dishwasher-funk",
   },
   "0fe99b": {
-    "id": "0fe99b",
-    "email": "tiny@tiny.com",
-    "password": "$2b$10$YT8hvj9HhinN3ovJ8rpwDumJCK4VqbWukAko1vR7jLIsZOSus//Je"
-  }
+    id: "0fe99b",
+    email: "tiny@tiny.com",
+    password: "$2b$10$YT8hvj9HhinN3ovJ8rpwDumJCK4VqbWukAko1vR7jLIsZOSus//Je",
+  },
 };
 
 ////////////////
@@ -85,7 +86,6 @@ app.get("/", (req, res) => {
 // [GET] => MY URLS PAGE
 
 app.get("/urls", (req, res) => {
-  
   // Retrieve user from req.cookies
   let user = req.session.user_id;
 
@@ -134,7 +134,6 @@ app.get("/urls/new", (req, res) => {
   // Pass in "users" (user DB) for conditional logic in _header.ejs so that email can be looked up and displayed in header
   const templateVars = { user: user, users: users };
   res.render("urls_new", templateVars);
-
 });
 
 // [GET] => NEW SHORT URL
@@ -148,7 +147,12 @@ app.get("/urls/:shortURL", (req, res) => {
   // Pass in "users" (user DB) for conditional logic in _header.ejs so that email can be looked up and displayed in header
   // Pass in "longURL" in order to display on urls_new.ejs
   // Pass in "shortURL" in order to display on urls_new.ejs // urls_new.ejs will handle redirect
-  const templateVars = { user: user, users: users, longURL: longURL, shortURL: shortURL };
+  const templateVars = {
+    user: user,
+    users: users,
+    longURL: longURL,
+    shortURL: shortURL,
+  };
   res.render("urls_show", templateVars);
 });
 
@@ -158,7 +162,6 @@ app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
-
 
 /////////////////
 // POST ROUTES //
@@ -177,7 +180,7 @@ app.post("/urls", (req, res) => {
 
   // Update urlDatabase with new key value pair of shortURL and longURL
   urlDatabase[shortURL] = { longURL: longURL, userID: user };
-  
+
   // Redirect to new page for shortURL
   res.redirect(`/urls/${shortURL}`);
 });
@@ -185,7 +188,6 @@ app.post("/urls", (req, res) => {
 // [POST] => REGISTRATION PAGE
 
 app.post("/register", (req, res) => {
-  
   // Pull data from req.body
   const uniqueUserID = randomString();
   const email = req.body.email;
@@ -198,7 +200,9 @@ app.post("/register", (req, res) => {
   }
 
   // Respond with appropriate error if email or password are empty strings
-  if ("POST | register | findUserByEmail output:", findUserByEmail(email, users)) {
+  if (
+    ("POST | register | findUserByEmail output:", findUserByEmail(email, users))
+  ) {
     res.send("status code 400: user already exists");
     return;
   }
@@ -207,7 +211,11 @@ app.post("/register", (req, res) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   // Create new user object with data pulled from req.body and add this to users DB
-  users[uniqueUserID] = { "id": uniqueUserID, "email": email, "password": hashedPassword };
+  users[uniqueUserID] = {
+    id: uniqueUserID,
+    email: email,
+    password: hashedPassword,
+  };
 
   // Set user_id cookie containing the user's newly generated ID
   // res.cookie("user_id", uniqueUserID) // Deprecated
@@ -215,17 +223,15 @@ app.post("/register", (req, res) => {
 
   // Redirect to /urls
   res.redirect("/urls");
-
 });
 
 // [POST] => LOGIN 2.0
 
 app.post("/login", (req, res) => {
-  
   // Extract needed data from req.body
   let submittedEmail = req.body.email;
   let submittedPassword = req.body.password;
-  
+
   // Store in a variable individual user object by pulling out data via findUserByEmail function
   let individualUserObj = findUserByEmail(submittedEmail, users);
 
@@ -234,7 +240,7 @@ app.post("/login", (req, res) => {
     res.send("status code 403: email can't be found");
     return;
   }
-  
+
   // Store in a variable the password stored in individualUserObj
   let storedPassword = individualUserObj.password;
 
@@ -252,13 +258,11 @@ app.post("/login", (req, res) => {
 
   // Redirect to /urls
   res.redirect("/urls");
-
 });
 
 // [POST] => LOGOUT 2.0
 
 app.post("/logout", (req, res) => {
-
   // Clear cookie // Don't need to pass variables or pull info from req.cookies, as we already know the name of the key of the cookie that we want to clear - "user_id" // This should be passed as string
   // res.clearCookie("user_id"); // Deprecated
   req.session.user_id = null;
@@ -269,7 +273,6 @@ app.post("/logout", (req, res) => {
 // [POST] => EDIT LONG URL
 
 app.post("/urls/:shortURL/edit", (req, res) => {
-
   // Verify that a user is logged in, in order to deny unauthorized editing
   let user = req.session.user_id;
 
@@ -285,7 +288,6 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 // [POST] => DELETE URL
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-
   // Verify that a user is logged in, in order to deny unauthorized editing
   let user = req.session.user_id;
 
@@ -295,7 +297,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
   // Delete requested URL
   delete urlDatabase[req.params.shortURL];
-  
+
   // Then redirect to /urls
   res.redirect("/urls");
 });
