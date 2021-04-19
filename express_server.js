@@ -83,10 +83,7 @@ app.get("/", (req, res) => {
   res.redirect("/urls!");
 });
 
-// [GET] => MY URLS PAGE
-
 app.get("/urls", (req, res) => {
-  // Retrieve user from req.cookies
   let user = req.session.user_id;
 
   // Store in variable the result of calling "urlsForUser" function passing in "user" (logged in user) and "urlDatabase", which will return an object containing the URLs (ie key value pairs) (ie shortURL: longURL) associated with the current logged in user
@@ -99,8 +96,6 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-// [GET] => REGISTER
-
 app.get("/register", (req, res) => {
   let user = req.session.user_id;
 
@@ -108,8 +103,6 @@ app.get("/register", (req, res) => {
   const templateVars = { user: user };
   res.render("register", templateVars);
 });
-
-// [GET] => LOGIN
 
 app.get("/login", (req, res) => {
   let user = req.session.user_id;
@@ -119,8 +112,7 @@ app.get("/login", (req, res) => {
   res.render("login", templateVars);
 });
 
-// [GET] => CREATE NEW URL/TINYURL PAGE
-
+// CREATE NEW URL/TINYURL PAGE
 app.get("/urls/new", (req, res) => {
   let user = req.session.user_id;
 
@@ -136,8 +128,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-// [GET] => NEW SHORT URL
-
+// NEW SHORT URL PAGE
 app.get("/urls/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
   let longURL = urlDatabase[req.params.shortURL].longURL;
@@ -156,8 +147,7 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-// [GET] => REDIRECT FROM SHORT URL TO LONG URL
-
+// REDIRECT FROM SHORT URL TO LONG URL
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
@@ -167,8 +157,7 @@ app.get("/u/:shortURL", (req, res) => {
 // POST ROUTES //
 /////////////////
 
-// [POST] => CREATE NEW SHORT/TINY URL
-
+// CREATE NEW SHORT/TINY URL
 app.post("/urls", (req, res) => {
   // Declare variable, store value of generated new random short URL by calling randomString function
   let shortURL = randomString();
@@ -181,12 +170,10 @@ app.post("/urls", (req, res) => {
   // Update urlDatabase with new key value pair of shortURL and longURL
   urlDatabase[shortURL] = { longURL: longURL, userID: user };
 
-  // Redirect to new page for shortURL
   res.redirect(`/urls/${shortURL}`);
 });
 
-// [POST] => REGISTRATION PAGE
-
+// REGISTRATION PAGE
 app.post("/register", (req, res) => {
   // Pull data from req.body
   const uniqueUserID = randomString();
@@ -221,12 +208,10 @@ app.post("/register", (req, res) => {
   // res.cookie("user_id", uniqueUserID) // Deprecated
   req.session.user_id = uniqueUserID;
 
-  // Redirect to /urls
   res.redirect("/urls");
 });
 
-// [POST] => LOGIN 2.0
-
+// LOGIN 2.0
 app.post("/login", (req, res) => {
   // Extract needed data from req.body
   let submittedEmail = req.body.email;
@@ -256,12 +241,10 @@ app.post("/login", (req, res) => {
   // Set user_id cookie with value of storedUserID
   req.session.user_id = storedUserID;
 
-  // Redirect to /urls
   res.redirect("/urls");
 });
 
-// [POST] => LOGOUT 2.0
-
+// LOGOUT 2.0
 app.post("/logout", (req, res) => {
   // Clear cookie // Don't need to pass variables or pull info from req.cookies, as we already know the name of the key of the cookie that we want to clear - "user_id" // This should be passed as string
   // res.clearCookie("user_id"); // Deprecated
@@ -270,8 +253,7 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 });
 
-// [POST] => EDIT LONG URL
-
+// EDIT LONG URL
 app.post("/urls/:shortURL/edit", (req, res) => {
   // Verify that a user is logged in, in order to deny unauthorized editing
   let user = req.session.user_id;
@@ -285,8 +267,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   res.redirect("/urls");
 });
 
-// [POST] => DELETE URL
-
+// DELETE URL
 app.post("/urls/:shortURL/delete", (req, res) => {
   // Verify that a user is logged in, in order to deny unauthorized editing
   let user = req.session.user_id;
@@ -298,7 +279,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   // Delete requested URL
   delete urlDatabase[req.params.shortURL];
 
-  // Then redirect to /urls
   res.redirect("/urls");
 });
 
