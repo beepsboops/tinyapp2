@@ -1,26 +1,27 @@
-const express = require("express");
-const app = express();
-const PORT = 8080; // default port 8080
+///////////
+// SETUP //
+///////////
 
-const { findUserByEmail, randomString, urlsForUser } = require(`./helpers`);
+const PORT            = 8080;
+const express         = require("express");
+const bodyParser      = require("body-parser");
+const morgan          = require("morgan");
+const bcrypt          = require("bcrypt");
+const cookieSession   = require("cookie-session");
+const app             = express();
 
-app.set("view engine", "ejs");
-
-morgan = require("morgan");
-app.use(morgan("dev"));
-
-const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
-
-const bcrypt = require("bcrypt");
-
-const cookieSession = require("cookie-session");
+app.use(morgan("dev"));
 app.use(
   cookieSession({
     name: "session",
     keys: ["key1", "key2"],
   })
 );
+
+app.set("view engine", "ejs");
+  
+const {findUserByEmail, randomString, urlsForUser } = require(`./helpers`);
 
 /////////
 // DEV //
@@ -161,10 +162,8 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   // Declare variable, store value of generated new random short URL by calling randomString function
   let shortURL = randomString();
-
   // Declare variable, store value of user inputed long URL
   let longURL = req.body.longURL;
-
   let user = req.session.user_id;
 
   // Update urlDatabase with new key value pair of shortURL and longURL
