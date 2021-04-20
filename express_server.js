@@ -97,14 +97,16 @@ app.get("/urls", (req, res) => {
 
 app.get("/register", (req, res) => {
   let user = req.session.user_id;
-  // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out // If register button is visible, user should not exist ie user = false
+  // Pass in "user" for conditional logic in _header.ejs to determine login status
+  // If register button is visible, user should not exist ie user = false
   const templateVars = { user: user };
   res.render("register", templateVars);
 });
 
 app.get("/login", (req, res) => {
   let user = req.session.user_id;
-  // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out // If register button is visible, user should not exist ie user = false
+  // Pass in "user" for conditional logic in _header.ejs to determine login status
+  // If register button is visible, user should not exist ie user = false
   const templateVars = { user: user };
   res.render("login", templateVars);
 });
@@ -118,9 +120,8 @@ app.get("/urls/new", (req, res) => {
     res.redirect("/login");
   }
 
-  // If user = true
-  // Pass in "user"  for conditional logic in _header.ejs so that it can know if a user is logged in or logged out
-  // Pass in "users" (user DB) for conditional logic in _header.ejs so that email can be looked up and displayed in header
+  // If user = true, pass "user" to determin login status, pass in "users" to 
+  // Pass in "users" (user DB) for conditional logic in _header.ejs to display logged in email
   const templateVars = { user: user, users: users };
   res.render("urls_new", templateVars);
 });
@@ -130,10 +131,10 @@ app.get("/urls/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
   let longURL = urlDatabase[req.params.shortURL].longURL;
   let user = req.session.user_id;
-  // Pass in "user" for conditional logic in _header.ejs so that it can know if a user is logged in or logged out
-  // Pass in "users" (user DB) for conditional logic in _header.ejs so that email can be looked up and displayed in header
+  // Pass in "user" for conditional logic in _header.ejs to determine login status
+  // Pass in "users" (user DB) for conditional logic in _header.ejs to display logged in email
   // Pass in "longURL" in order to display on urls_new.ejs
-  // Pass in "shortURL" in order to display on urls_new.ejs // urls_new.ejs will handle redirect
+  // Pass in "shortURL" in order to display on urls_new.ejs, urls_new.ejs will handle redirect
   const templateVars = {
     user: user,
     users: users,
@@ -155,9 +156,9 @@ app.get("/u/:shortURL", (req, res) => {
 
 // CREATE NEW SHORT/TINY URL
 app.post("/urls", (req, res) => {
-  // Declare variable, store value of generated new random short URL by calling randomString function
+  // Store in variable value of generated new random short URL
   let shortURL = randomString();
-  // Declare variable, store value of user inputed long URL
+  // Store in variable value of user inputed long URL
   let longURL = req.body.longURL;
   let user = req.session.user_id;
 
@@ -199,7 +200,6 @@ app.post("/register", (req, res) => {
   };
 
   // Set user_id cookie containing the user's newly generated ID
-  // res.cookie("user_id", uniqueUserID) // Deprecated
   req.session.user_id = uniqueUserID;
 
   res.redirect("/urls");
@@ -239,8 +239,7 @@ app.post("/login", (req, res) => {
 
 // LOGOUT 2.0
 app.post("/logout", (req, res) => {
-  // Clear cookie // Don't need to pass variables or pull info from req.cookies, as we already know the name of the key of the cookie that we want to clear - "user_id" // This should be passed as string
-  // res.clearCookie("user_id"); // Deprecated
+  // Clear cookie
   req.session.user_id = null;
   res.redirect("/urls");
 });
